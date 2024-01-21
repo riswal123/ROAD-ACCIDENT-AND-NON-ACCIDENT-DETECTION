@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Prediction</title>
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+        }
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .btn {
+            border: 2px solid gray;
+            color: gray;
+            background-color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .upload-btn-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+        }
+        #image-preview {
+            max-width: 400px;
+            margin: 20px 0;
+        }
+        #result {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        #predict-button {
+            display: none;
+        }
+        .predicting {
+            background-color: #b3ffb3; /* Green color */
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>ROAD ACCIDENT AND NON-ACCIDENT DETECTION</h2>
+        <div class="upload-btn-wrapper">
+            <button class="btn">Select Image</button>
+            <input type="file" id="image-input" accept=".jpg, .jpeg, .png">
+        </div>
+        <div id="image-preview"></div>
+        <form id="prediction-form" style="display: inline;">
+            <button id="predict-button" class="btn" disabled>Predict</button>
+            <input type="hidden" name="expected_class" id="expected-class" value="">
+        </form>
+        <div id="result"></div>
+    </div>
+    <script>
+        var selectedImage = null;
+
+        document.getElementById("image-input").addEventListener("change", function(e) {
+            selectedImage = e.target.files[0];
+
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                var img = document.createElement("img");
+                img.src = event.target.result;
+                img.style.maxWidth = "100%";
+                document.getElementById("image-preview").innerHTML = "";
+                document.getElementById("image-preview").appendChild(img);
+
+                document.getElementById("predict-button").disabled = false;
+                document.getElementById("predict-button").style.display = "inline-block";
+            };
+            reader.readAsDataURL(selectedImage);
+        });
+
+        document.getElementById("prediction-form").addEventListener("submit", function(e) {
+            e.preventDefault();
+
+            var expectedClass = "Accident"; // Replace with the actual expected class
+            document.getElementById("expected-class").value = expectedClass;
+
+            var predictButton = document.getElementById("predict-button");
+            predictButton.disabled = true;
+            predictButton.className += " predicting";
+            predictButton.innerHTML = "Predicting...";
+
+            var formData = new FormData(this);
+            formData.append("image", selectedImage);
+
+            fetch("/predict", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerText = "Prediction: " + data.prediction + ", Confidence: " + (data.confidence * 100).toFixed(2) + "%";
+
+                predictButton.className = "btn";
+                predictButton.innerHTML = "Predict";
+            })
+            .catch(error => {
+                console.error("Error:", error);
+
+                predictButton.className = "btn";
+                predictButton.innerHTML = "Predict";
+            });
+        });
+    </script>
+</body>
+</html>
