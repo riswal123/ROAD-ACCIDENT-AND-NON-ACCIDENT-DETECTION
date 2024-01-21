@@ -4,3 +4,4 @@ Pandas
 Matplotlib
 Tensorflow
 Keras
+pip install kaggle numpy pandas matplotlib tensorflow keras
